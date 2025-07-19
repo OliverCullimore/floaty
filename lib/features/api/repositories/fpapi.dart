@@ -13,6 +13,7 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:cloudflare_interceptor/cloudflare_interceptor.dart';
 
 final FPApiRequests fpApiRequests = GetIt.I<FPApiRequests>();
 
@@ -57,6 +58,16 @@ class FPApiRequests {
 
     _dio.interceptors.add(CookieManager(cookieJar));
     _dio.interceptors.add(DioCacheInterceptor(options: _cacheOptions));
+  }
+
+  Future<void> initCloudflareInterceptor(BuildContext context) async {
+    _dio.interceptors.add(
+      CloudflareInterceptor(
+        dio: _dio,
+        cookieJar: cookieJar,
+        context: context,
+      ),
+    );
   }
 
   Future<String> postData(

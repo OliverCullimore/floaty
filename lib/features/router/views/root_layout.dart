@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:floaty/features/api/models/definitions.dart';
 import 'package:floaty/shared/controllers/root_provider.dart';
+import 'package:floaty/features/api/repositories/fpapi.dart';
 import 'package:floaty/features/player/components/mini_player_widget.dart';
 import 'package:floaty/features/player/controllers/media_player_service.dart';
 import 'package:go_router/go_router.dart';
@@ -76,6 +77,9 @@ class RootLayoutState extends ConsumerState<RootLayout>
     final isSidebarCollapsed = isSmallScreen ? false : rootState.isCollapsed;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Init CloudflareInterceptor for API requests now we have a build context
+      fpApiRequests.initCloudflareInterceptor(context);
+
       if (!isSidebarCollapsed) {
         if (!rootState.showText) {
           if (mounted) {

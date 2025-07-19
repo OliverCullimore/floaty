@@ -321,6 +321,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.2"
+  cloudflare_interceptor:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: floaty
+      resolved-ref: "10e2b57fb42d388a36d923224541d9edbf369807"
+      url: "https://github.com/OliverCullimore/cloudflare_interceptor"
+    source: git
+    version: "0.1.0"
   cloudflare_turnstile:
     dependency: "direct main"
     description:
