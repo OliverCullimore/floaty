@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:floaty/features/router/components/picture_sidebar_item.dart';
 import 'package:floaty/features/router/components/sidebar_channel_item.dart';
 import 'package:floaty/features/router/components/sidebar_item.dart';
@@ -7,6 +9,7 @@ import 'package:floaty/shared/components/switcher.dart';
 import 'package:floaty/whitelabels.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloudflare_interceptor/cloudflare_interceptor.dart';
 
 import 'package:floaty/features/api/models/definitions.dart';
 import 'package:floaty/shared/controllers/root_provider.dart';
@@ -29,10 +32,34 @@ class RootLayoutState extends ConsumerState<RootLayout>
     with SingleTickerProviderStateMixin {
   UserSelfV3Response? user;
   late bool isSmallScreen;
+  int? cfInterceptor;
+  Timer? cookieTimer;
+  bool cookiesLoaded = false;
+
   @override
   void initState() {
     super.initState();
     ref.read(rootProvider.notifier).loadsidebar();
+    _init();
+  }
+
+  void _init() {
+    cookieTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (fpApiRequests.isInitComplete) {
+        timer.cancel();
+        setState(() {
+          cookiesLoaded = true;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (cfInterceptor != null) {
+      fpApiRequests.dio.interceptors.removeAt(cfInterceptor!);
+    }
   }
 
   void setAppBar(Widget title, {List<Widget>? actions, Widget? leading}) {
@@ -78,7 +105,16 @@ class RootLayoutState extends ConsumerState<RootLayout>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Init CloudflareInterceptor for API requests now we have a build context
-      fpApiRequests.initCloudflareInterceptor(context);
+      if (cookiesLoaded) {
+        cfInterceptor = fpApiRequests.dio.interceptors.length + 1;
+        fpApiRequests.dio.interceptors.add(
+          CloudflareInterceptor(
+            dio: fpApiRequests.dio,
+            cookieJar: fpApiRequests.cookieJar,
+            context: context,
+          ),
+        );
+      }
 
       if (!isSidebarCollapsed) {
         if (!rootState.showText) {
